@@ -7,7 +7,8 @@ COPY requirements/test-requirements.txt /tmp/test-requirements.txt
 
 RUN apt-get update && \
     apt-get install -y apache2 \
-            libapache2-mod-wsgi-py3
+            libapache2-mod-wsgi-py3 \
+            libaprutil1-dbd-pgsql
 
 RUN set -x \
     && python -m venv /opt/orders_api \
@@ -19,8 +20,12 @@ RUN set -x \
 # RUN adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID user
 # USER user
 
+RUN ln -sf /dev/stdout /var/log/apache2/error.log
+
 # Activate the mod_wsgi
-RUN a2enmod wsgi
+RUN a2enmod wsgi && \
+    a2enmod authn_dbd && \
+    a2enmod authn_socache
 
 # Add the apache VirtualHost, to setup the WSGI module for the app
 # COPY apache-vhost.conf /etc/apache2/sites-enabled/000-default.conf

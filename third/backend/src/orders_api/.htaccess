@@ -1,0 +1,3 @@
+AuthType Basic
+AuthName "My Secure Directory"
+Require valid-user
