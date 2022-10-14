@@ -9,6 +9,7 @@ install_requires = [
     "sqlalchemy",
     "aiofiles",
     "uvicorn",
+    # "a2wsgi"
 ]
 
 

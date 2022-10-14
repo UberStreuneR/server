@@ -4,10 +4,11 @@ services:
   api:
     image: orders_api:latest
     ports:
-      - "8000:8000"
-    command: uvicorn --reload --host 0.0.0.0 --port 8000 orders_api.main:app
+      - "8000:80"
+    # command: uvicorn --reload --host 0.0.0.0 --port 8000 orders_api.main:app
     volumes:
       - ./backend:/workspace:z
+      - ./backend/apache-vhost.conf:/etc/apache2/sites-enabled/000-default.conf
     depends_on:
       - db
     environment:
