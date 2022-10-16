@@ -28,8 +28,8 @@ services:
     image: postgres:13
     ports:
       - "2345:5432"
-    volumes:
-      - ./backend/init.sql:/docker-entrypoint-initdb.d/
+    # volumes:
+    #   - ./backend/postgres/:/docker-entrypoint-initdb.d/
     environment:
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "mypassword"

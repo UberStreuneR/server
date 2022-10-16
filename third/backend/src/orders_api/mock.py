@@ -1,4 +1,4 @@
-from orders_api.db.models import Store, Product
+from orders_api.db.models import Store, Product, User
 from orders_api.db.session import create_session
 
 
@@ -50,6 +50,13 @@ products = [
     },
 ]
 
+users = [
+    {
+        "id": 1,
+        "login": "admin",
+        "password": "qwerty123"
+    }
+]
 
 def insert_mock_data(session):
     store_rows = [Store(**store) for store in stores]
@@ -61,6 +68,8 @@ def insert_mock_data(session):
     product_rows[2].store = store_rows[1]
     product_rows[3].store = store_rows[1]
     session.add_all(product_rows)
+    user_rows = [User(**user) for user in users]
+    session.add_all(user_rows)
     session.commit()
 
 

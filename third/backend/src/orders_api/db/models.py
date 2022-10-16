@@ -1,3 +1,4 @@
+from enum import unique
 import uuid
 from typing import Any
 
@@ -59,3 +60,10 @@ class OrderItem(Base):
     product_id = sa.Column(ForeignKey("products.product_id"), primary_key=True)
     product = relationship("Product", uselist=False)
     quantity = sa.Column(sa.Integer, nullable=False)
+
+
+class User(Base):
+    __tablename__ = "users"
+    id = sa.Column(sa.Integer, nullable=False, primary_key=True)
+    login = sa.Column(sa.String(20), unique=True, nullable=False)
+    password = sa.Column(sa.String(20), nullable=False)
