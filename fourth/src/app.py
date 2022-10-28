@@ -4,6 +4,7 @@ from fastapi.openapi.docs import (
 )
 from src.config import get_settings
 
+
 def create_app() -> FastAPI:
     app = FastAPI(docs_url=None)
 
@@ -24,5 +25,9 @@ def create_app() -> FastAPI:
             swagger_js_url="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.14.0/swagger-ui-bundle.js",
             swagger_css_url="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.14.0/swagger-ui.css",
         )
-    
+
+    from src.routers import client, account, line
+    app.include_router(client.router)
+    app.include_router(account.router)
+    app.include_router(line.router)
     return app

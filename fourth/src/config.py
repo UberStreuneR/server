@@ -5,9 +5,10 @@ from os import getenv
 class Settings(BaseSettings):
     database_url: PostgresDsn
 
+
 def get_settings() -> Settings:
     settings = Settings()
-    if (db := getenv("DATABASE_URL")) is not None:
+    if (db := getenv("POSTGRES_DB")) is not None:
         settings.database_url = PostgresDsn.build(
             scheme="postgresql",
             user=settings.database_url.user,
