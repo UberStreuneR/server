@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  api:
+    build: .
+    command: uvicorn --reload --host 0.0.0.0 --port 8000 src.main:app
+    volumes:
+      - ./:/app
+    ports:
+      - 8000:8000
+    environment:
+      DATABASE_URL: "postgresql://postgres:mypassword@db/bank_api"
+    depends_on:
+      - db
+
+  db:
+    image: postgres
+    ports:
+      - 2345:5432
+    container_name: db
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "mypassword"
+      POSTGRES_DB: "bank_api"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-d", "bank_api"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis
+    ports:
+      - 6379:6379
+
+  # frontend:
+  #   build: ./frontend
+  #   command: npm run dev
+  #   volumes:
+  #     - ./frontend:/app
+  #   ports:
+  #     - 3000:3000
