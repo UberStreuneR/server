@@ -51,6 +51,8 @@ def create_app() -> FastAPI:
         try:
             with open(f"src/files/{filename}.pdf", "rb") as file:
                 data = file.read()
+                if str(data).find("%PDF-") == -1:
+                    raise HTTPException(status_code=500, detail="File content type is not incorrect")
                 return {"file_size": len(data), "file_data": str(data)}
         except FileNotFoundError:
             raise HTTPException(status_code=404, detail="File not found")
@@ -63,6 +65,7 @@ def create_app() -> FastAPI:
         with open(f"src/files/{file.filename}", "wb") as new_file:
             data = await file.read()
             new_file.write(data)
+
         return {"file_name": file.filename}
 
     @app.get("/cookie")
