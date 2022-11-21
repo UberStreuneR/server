@@ -6,32 +6,45 @@ from fastapi.openapi.docs import (
 import time
 import uuid
 import json
-from src.config import get_settings
 from redis import Redis
-import os
+from base64 import b64encode
 
+from src.fake import *
 from src.utils import get_redis
 
 
 def create_app() -> FastAPI:
     app = FastAPI(docs_url=None)
 
-    @app.get("/health")
-    async def healthcheck():
-        return "Hello world"
+    @app.get("/fake-data")
+    async def get_fake_data():
+        fixtures = generate_fixtures()
 
-    @app.get("/settings")
-    async def settings_test():
-        return get_settings()
+        salary_to_age_data = get_salary_to_age(fixtures)
+        life_sat_data = get_life_sat_to_salary(fixtures)
+        salary_to_job_data = get_salary_to_job(fixtures)
 
-    @app.get("/crucial-data")
+        salary_to_age_plot = get_chart_from_x_y(*salary_to_age_data)
+        life_sat_pie = get_pie_chart_from_x_y(*life_sat_data)
+        salary_to_job_bar = get_bar_chart_from_x_y(*salary_to_job_data)
+
+        first_img = add_watermark_to_img(salary_to_age_plot)
+        second_img = add_watermark_to_img(life_sat_pie)
+        third_img = add_watermark_to_img(salary_to_job_bar)
+        first_img.seek(0)
+        second_img.seek(0)
+        third_img.seek(0)
+
+        return {"first": b64encode(first_img.read()), "second": b64encode(second_img.read()), "third": b64encode(third_img.read())}
+
+    @ app.get("/crucial-data")
     async def get_crucial_data(request: Request):
         r: Redis = get_redis()
         session_id = request.cookies.get("session_id")
         crucial_data = r.get(session_id)
         return crucial_data
 
-    @app.middleware("http")
+    @ app.middleware("http")
     async def session_middleware(request: Request, call_next):
         session_id = request.cookies.get("session_id")
         if session_id is not None:
@@ -46,18 +59,19 @@ def create_app() -> FastAPI:
             response.set_cookie("session_id", uuid.uuid4())
         return response
 
-    @app.get("/files/{filename}")
+    @ app.get("/files/{filename}")
     async def get_file(filename: str):
         try:
             with open(f"src/files/{filename}.pdf", "rb") as file:
                 data = file.read()
                 if str(data).find("%PDF-") == -1:
-                    raise HTTPException(status_code=500, detail="File content type is not incorrect")
+                    raise HTTPException(
+                        status_code=500, detail="File content type is not incorrect")
                 return {"file_size": len(data), "file_data": str(data)}
         except FileNotFoundError:
             raise HTTPException(status_code=404, detail="File not found")
 
-    @app.post("/files", status_code=201)
+    @ app.post("/files", status_code=201)
     async def create_file(file: UploadFile):
         if file.filename[-3:] != "pdf":
             raise HTTPException(

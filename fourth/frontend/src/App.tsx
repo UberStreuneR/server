@@ -17,10 +17,14 @@ function App() {
   const [message, setMessage] = useState({ message: " ", lightThemeOn: theme });
   const [crucial, setCrucial] = useState("");
 
+  const [images, setImages] = useState({});
+  console.log("Hello world");
   useEffect(() => {
     console.log(username, theme, language);
     let data = makeRequest("cookie");
     data.then(res => setMessage(res));
+    let imageData = makeRequest("fake-data");
+    imageData.then(res => setImages(res));
   }, []);
 
   const reverseTheme = () => {
@@ -90,6 +94,12 @@ function App() {
       <div>Crucial data: {JSON.stringify(crucial)}</div>
       {/* <div>{message.message}</div> */}
       {/* <div>Light theme is {message.lightThemeOn == "true" ? "on" : "off"}</div> */}
+      <img
+        src="data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAUA
+    AAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO
+        9TXL0Y4OHwAAAABJRU5ErkJggg=="
+        alt="Red dot"
+      />
     </div>
   );
 }
