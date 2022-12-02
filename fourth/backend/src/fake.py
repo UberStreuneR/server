@@ -3,9 +3,10 @@ from faker.providers import DynamicProvider
 import matplotlib.pyplot as plt
 import numpy as np
 import random
-from typing import List
+from typing import List, Tuple
 import io
 from PIL import Image
+from base64 import b64encode
 
 fake = Faker()
 
@@ -25,100 +26,86 @@ life_satisfaction_provider = DynamicProvider(provider_name="life_satisfaction", 
 fake.add_provider(life_satisfaction_provider)
 
 
-def generate_fixtures() -> List[dict]:
-    fixtures = []
-    for _ in range(50):
-        person = {}
-        person['name'] = fake.name()
-        person['job'] = fake.job()
-        person['age'] = random.randint(20, 55)
-        person['salary'] = random.randint(50000, 250000)
-        person['family'] = fake.family_status()
-        person['life_satisfaction'] = fake.life_satisfaction()
-        fixtures.append(person)
-    return fixtures
+class FixtureGenerator:
+    def __init__(self):
+        self.fixtures = self.generate_fixtures()
+        self.images = self.generate_images()
 
+    def create_x_and_y(self, x_label: str, y_label: str):
+        x = [person[x_label] for person in self.fixtures]
+        y = [person[y_label] for person in self.fixtures]
+        return zip(*sorted(zip(x, y)))
 
-def get_salary_to_age(fixtures: List[dict]) -> io.BytesIO:
-    x = [person['age'] for person in fixtures]
-    y = [person['salary'] for person in fixtures]
-    return zip(*sorted(zip(x, y)))
+    def get_images(self):
+        return self.images
 
+    def generate_fixtures(self) -> List[dict]:
+        fixtures = []
+        for _ in range(50):
+            person = {}
+            person['name'] = fake.name()
+            person['job'] = fake.job()
+            person['age'] = random.randint(20, 55)
+            person['salary'] = random.randint(50000, 250000)
+            person['family'] = fake.family_status()
+            person['life_satisfaction'] = fake.life_satisfaction()
+            fixtures.append(person)
+        return fixtures
 
-def get_life_sat_to_salary(fixtures: List[dict]) -> io.BytesIO:
-    x = [person['salary'] for person in fixtures]
-    y = [person['life_satisfaction'] for person in fixtures]
-    return zip(*sorted(zip(x, y)))
+    def get_chart_from_x_y(self, x: List, y: List) -> io.BytesIO:
+        fig, ax = plt.subplots()
+        ax.plot(x, y)
+        buffer = io.BytesIO()
+        fig.savefig(buffer, format='png')
+        return self.add_watermark_to_img(buffer)
 
+    def get_pie_chart_from_x_y(self, x: List, y: list) -> io.BytesIO:
+        data = {}
+        for label in set(y):
+            data[label] = 0
+        for index, value in enumerate(x):
+            data[y[index]] += value
+        fig, ax = plt.subplots()
+        # print(x, y)
+        ax.pie(list(data.values()), labels=list(data.keys()))
+        buffer = io.BytesIO()
+        fig.savefig(buffer, format='png')
+        return self.add_watermark_to_img(buffer)
 
-def get_salary_to_job(fixtures: List[dict]) -> io.BytesIO:
-    x = [person['salary'] for person in fixtures]
-    y = [person['job'] for person in fixtures]
-    return zip(*sorted(zip(x, y)))
+    def get_bar_chart_from_x_y(self, x: List, y: List) -> io.BytesIO:
+        data = {}
+        for label in set(y):
+            data[label] = 0
+        for index, value in enumerate(x):
+            data[y[index]] += value
+        fig, ax = plt.subplots()
+        ax.xaxis.set_tick_params(labelsize=7)
+        ax.bar(list(data.keys()), list(data.values()))
+        buffer = io.BytesIO()
+        fig.savefig(buffer, format='png')
+        buffer.seek(0)
+        return self.add_watermark_to_img(buffer)
 
+    def add_watermark_to_img(self, img_buf: io.BytesIO):
+        # img_buf.seek(0)
+        image = Image.open(img_buf)
+        # mark = Image.open("./files/watermark.png")
+        mark = Image.open("./src/files/watermark.png")
+        mark = mark.resize((50, 50))
+        image.paste(mark, (20, 20), mark)
+        buffer = io.BytesIO()
+        image.save(buffer, 'png')
+        buffer.seek(0)
+        return buffer
 
-def get_chart_from_x_y(x: List, y: List) -> io.BytesIO:
-    fig, ax = plt.subplots()
-    ax.plot(x, y)
-    buffer = io.BytesIO()
-    fig.savefig(buffer, format='png')
-    return buffer
+    def generate_images(self) -> Tuple[str, str, str]:
+        age_to_salary = self.create_x_and_y("age", "salary")
+        salary_to_life_sat = self.create_x_and_y("salary", "life_satisfaction")
+        salary_to_job = self.create_x_and_y("salary", "job")
 
+        salary_to_age_plot = self.get_chart_from_x_y(*age_to_salary)
+        life_sat_pie = self.get_pie_chart_from_x_y(*salary_to_life_sat)
+        salary_to_job_bar = self.get_bar_chart_from_x_y(*salary_to_job)
 
-def get_pie_chart_from_x_y(x: List, y: list) -> io.BytesIO:
-    data = {}
-    for label in set(y):
-        data[label] = 0
-    for index, value in enumerate(x):
-        data[y[index]] += value
-    fig, ax = plt.subplots()
-    # print(x, y)
-    ax.pie(list(data.values()), labels=list(data.keys()))
-    buffer = io.BytesIO()
-    fig.savefig(buffer, format='png')
-    return buffer
-
-
-def get_bar_chart_from_x_y(x: List, y: List) -> io.BytesIO:
-    data = {}
-    for label in set(y):
-        data[label] = 0
-    for index, value in enumerate(x):
-        data[y[index]] += value
-    fig, ax = plt.subplots()
-    ax.xaxis.set_tick_params(labelsize=7)
-    ax.bar(list(data.keys()), list(data.values()))
-    buffer = io.BytesIO()
-    fig.savefig(buffer, format='png')
-    return buffer
-
-
-def show_image_from_buffer(img_buf: io.BytesIO):
-    image = Image.open(img_buf)
-    image.show()
-
-
-def add_watermark_to_img(img_buf: io.BytesIO):
-    image = Image.open(img_buf)
-    # mark = Image.open("./files/watermark.png")
-    mark = Image.open("./src/files/watermark.png")
-    mark = mark.resize((50, 50))
-    image.paste(mark, (20, 20), mark)
-    buffer = io.BytesIO()
-    image.save(buffer, 'png')
-    return buffer
-    # image.show()
-
-
-fixtures = generate_fixtures()
-# data = get_salary_to_age(fixtures)
-# data = get_life_sat_to_salary(fixtures)
-data = get_salary_to_job(fixtures)
-# buffer = get_chart_from_x_y(*data)
-# buffer = get_pie_chart_from_x_y(*data)
-buffer = get_bar_chart_from_x_y(*data)
-img = add_watermark_to_img(buffer)
-img = Image.open(img)
-img.show()
-# show_image_from_buffer(buffer)
-# show_image_with_watermark(buffer)
+        return b64encode(salary_to_age_plot.read()), b64encode(
+            life_sat_pie.read()), b64encode(salary_to_job_bar.read())

@@ -7,9 +7,9 @@ import time
 import uuid
 import json
 from redis import Redis
-from base64 import b64encode
 
-from src.fake import *
+
+from src.fake import FixtureGenerator
 from src.utils import get_redis
 
 
@@ -18,24 +18,11 @@ def create_app() -> FastAPI:
 
     @app.get("/fake-data")
     async def get_fake_data():
-        fixtures = generate_fixtures()
 
-        salary_to_age_data = get_salary_to_age(fixtures)
-        life_sat_data = get_life_sat_to_salary(fixtures)
-        salary_to_job_data = get_salary_to_job(fixtures)
+        fixture_generator = FixtureGenerator()
+        first, second, third = fixture_generator.get_images()
 
-        salary_to_age_plot = get_chart_from_x_y(*salary_to_age_data)
-        life_sat_pie = get_pie_chart_from_x_y(*life_sat_data)
-        salary_to_job_bar = get_bar_chart_from_x_y(*salary_to_job_data)
-
-        first_img = add_watermark_to_img(salary_to_age_plot)
-        second_img = add_watermark_to_img(life_sat_pie)
-        third_img = add_watermark_to_img(salary_to_job_bar)
-        first_img.seek(0)
-        second_img.seek(0)
-        third_img.seek(0)
-
-        return {"first": b64encode(first_img.read()), "second": b64encode(second_img.read()), "third": b64encode(third_img.read())}
+        return {"first": first, "second": second, "third": third}
 
     @ app.get("/crucial-data")
     async def get_crucial_data(request: Request):

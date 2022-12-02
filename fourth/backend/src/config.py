@@ -3,7 +3,7 @@ from os import getenv
 
 
 class Settings(BaseSettings):
-    database_url: PostgresDsn = "postgresql://postgres:mypassword@localhost:2345/bank_api"
+    database_url: PostgresDsn = "postgresql://postgres:mypassword@localhost:5432/bank_api"
 
 
 def get_settings() -> Settings:

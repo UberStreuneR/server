@@ -12,11 +12,12 @@ services:
       DATABASE_URL: "postgresql://postgres:mypassword@db/bank_api"
     depends_on:
       - db
+      - redis
 
   db:
     image: postgres
     ports:
-      - 2345:5432
+      - 5432:5432
     container_name: db
     environment:
       POSTGRES_USER: "postgres"
